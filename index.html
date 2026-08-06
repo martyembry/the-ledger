@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Ledger</title>
+<meta name="description" content="A working record of Black children and young adults who died under circumstances that were never fully explained." />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  :root {
+    --ink: #17181C;
+    --panel: #1D1F25;
+    --line: #34363D;
+    --parchment: #F0E9DA;
+    --text-on-ink: #EDE6D6;
+    --muted-on-ink: #B7AF9F;
+    --gold: #B8922E;
+    --brick: #7C3F35;
+    --brick-bg: #F3E4E0;
+    --gold-bg: #F3ECD8;
+    --forest: #4B5A4E;
+    --forest-bg: #E2E8E2;
+    --ash: #7A756B;
+    --ash-bg: #E9E5DC;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ink);
+    color: var(--text-on-ink);
+    font-family: 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  }
+  .sans { font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; }
+  a { color: inherit; }
+
+  header {
+    padding: 48px 40px 28px;
+    border-bottom: 1px solid var(--line);
+    max-width: 880px;
+    margin: 0 auto;
+  }
+  .eyebrow {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold);
+  }
+  h1 { font-size: clamp(32px, 5vw, 46px); margin: 0; font-weight: 400; letter-spacing: -0.01em; line-height: 1.1; }
+  .lede { margin-top: 14px; max-width: 560px; color: var(--muted-on-ink); font-size: 15px; line-height: 1.6; }
+
+  main { max-width: 880px; margin: 0 auto; padding: 28px 40px 80px; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 28px; }
+  .search-wrap { position: relative; flex: 1 1 220px; }
+  .search-wrap svg { position: absolute; left: 12px; top: 12px; }
+  input[type="text"], select {
+    width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--panel); color: var(--text-on-ink); font-size: 14px; font-family: inherit;
+  }
+  .search-wrap input { padding-left: 34px; }
+
+  .entries { display: flex; flex-direction: column; gap: 22px; }
+  article {
+    background: var(--parchment); color: #2A2621; border-radius: 10px; padding: 24px 26px;
+  }
+  .entry-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .entry-num { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #8A7F6A; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600;
+    padding: 4px 10px; border-radius: 20px;
+  }
+  h2.name { font-size: 24px; font-weight: 500; margin: 10px 0 4px; }
+  .meta { font-size: 13px; color: #5C5346; margin: 0 0 14px; }
+  .summary { font-size: 15.5px; line-height: 1.65; margin: 0 0 14px; color: #3A342C; }
+  .sources { display: flex; flex-wrap: wrap; gap: 10px; }
+  .sources a {
+    display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--brick);
+    text-decoration: none; border-bottom: 1px solid #C9A79C;
+  }
+  .empty { color: #8A8171; font-size: 14px; }
+  .footnote { margin-top: 40px; font-size: 12.5px; color: #6E655A; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow sans">Case documentation</div>
+  <h1>The Ledger</h1>
+  <p class="lede sans">A working record of Black children and young adults who died under
+    circumstances that were never fully explained. Every entry is dated,
+    located, and sourced.</p>
+</header>
+
+<main>
+  <div class="controls">
+    <div class="search-wrap">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8A8171" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="search" type="text" class="sans" placeholder="Search by name, place, detail…" />
+    </div>
+    <select id="filter" class="sans">
+      <option value="all">All statuses</option>
+      <option value="unresolved">Unresolved</option>
+      <option value="investigation">Under investigation</option>
+      <option value="resolved">Resolved</option>
+      <option value="unknown">Status unclear</option>
+    </select>
+  </div>
+
+  <div id="entries" class="entries"></div>
+  <p id="loading" class="sans empty">Loading the ledger…</p>
+
+  <p class="footnote sans">This page is read-only. Cases are added and edited in a
+    source sheet that only the editor controls.</p>
+</main>
+
+<script>
+  // Paste the "Publish to web" CSV link from your Google Sheet here.
+  const SHEET_CSV_URL = "PASTE_YOUR_PUBLISHED_CSV_LINK_HERE";
+
+  const STATUS = {
+    unresolved: { label: "Unresolved", color: "var(--brick)", bg: "var(--brick-bg)", flame: true },
+    investigation: { label: "Under investigation", color: "var(--gold)", bg: "var(--gold-bg)", flame: true },
+    resolved: { label: "Resolved", color: "var(--forest)", bg: "var(--forest-bg)", flame: false },
+    unknown: { label: "Status unclear", color: "var(--ash)", bg: "var(--ash-bg)", flame: false },
+  };
+
+  function statusKey(raw) {
+    const s = (raw || "").toLowerCase().trim();
+    if (s.startsWith("unresolved")) return "unresolved";
+    if (s.startsWith("under") || s.startsWith("investig")) return "investigation";
+    if (s.startsWith("resolved")) return "resolved";
+    return "unknown";
+  }
+
+  function flameIcon() {
+    return '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 17a2.5 2.5 0 0 0 2.5-2.5c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7.5 7.5 0 1 1-15 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>';
+  }
+
+  function extIcon() {
+    return '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>';
+  }
+
+  function rowToCase(row, i) {
+    const sources = [];
+    for (let n = 1; n <= 6; n++) {
+      const label = row[`Source${n}Name`];
+      const url = row[`Source${n}URL`];
+      if (url && url.trim()) sources.push({ label: (label && label.trim()) || "Source", url: url.trim() });
+    }
+    return {
+      id: i,
+      name: (row.Name || "").trim(),
+      age: (row.Age || "").trim(),
+      location: (row.Location || "").trim(),
+      date: (row.Date || "").trim(),
+      status: statusKey(row.Status),
+      summary: (row.Summary || "").trim(),
+      sources,
+    };
+  }
+
+  let allCases = [];
+
+  function render() {
+    const q = document.getElementById("search").value.trim().toLowerCase();
+    const filter = document.getElementById("filter").value;
+    const list = allCases.filter(c => {
+      const matchesFilter = filter === "all" || c.status === filter;
+      const matchesQuery = !q || c.name.toLowerCase().includes(q) ||
+        c.location.toLowerCase().includes(q) || c.summary.toLowerCase().includes(q);
+      return matchesFilter && matchesQuery;
+    });
+
+    const container = document.getElementById("entries");
+    if (list.length === 0) {
+      container.innerHTML = '<p class="empty sans">Nothing matches that search.</p>';
+      return;
+    }
+
+    container.innerHTML = list.map((c, i) => {
+      const s = STATUS[c.status];
+      const meta = [c.age && `Age ${c.age}`, c.location, c.date].filter(Boolean).join(" · ");
+      const sources = c.sources.map(src =>
+        `<a href="${src.url}" target="_blank" rel="noreferrer">${src.label} ${extIcon()}</a>`
+      ).join("");
+      return `
+        <article style="border-left:5px solid ${s.color}">
+          <div class="entry-top">
+            <span class="entry-num sans">Entry ${String(i + 1).padStart(2, "0")}</span>
+            <span class="badge sans" style="background:${s.bg}; color:${s.color}">
+              ${s.flame ? flameIcon() : ""} ${s.label}
+            </span>
+          </div>
+          <h2 class="name">${c.name}</h2>
+          <p class="meta sans">${meta}</p>
+          <p class="summary">${c.summary}</p>
+          <div class="sources sans">${sources}</div>
+        </article>`;
+    }).join("");
+  }
+
+  function loadData() {
+    if (SHEET_CSV_URL.includes("PASTE_YOUR")) {
+      document.getElementById("loading").textContent =
+        "No data source connected yet. Add your published sheet link in the site code.";
+      return;
+    }
+    Papa.parse(SHEET_CSV_URL, {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        allCases = results.data
+          .filter(row => row.Name && row.Name.trim())
+          .map(rowToCase)
+          .reverse();
+        document.getElementById("loading").style.display = "none";
+        render();
+      },
+      error: () => {
+        document.getElementById("loading").textContent =
+          "Could not load the sheet. Check that it's published to the web as CSV.";
+      },
+    });
+  }
+
+  document.getElementById("search").addEventListener("input", render);
+  document.getElementById("filter").addEventListener("change", render);
+  loadData();
+</script>
+
+</body>
+</html>
