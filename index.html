@@ -34,32 +34,53 @@
   a { color: inherit; }
 
   header {
-    padding: 48px 40px 28px;
+    padding: 56px 40px 36px;
     border-bottom: 1px solid var(--line);
     max-width: 880px;
     margin: 0 auto;
+    position: relative;
+  }
+  header::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 15% -10%, rgba(184,146,46,0.14), transparent 55%);
+    pointer-events: none;
   }
   .eyebrow {
     display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
     font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold);
   }
-  h1 { font-size: clamp(32px, 5vw, 46px); margin: 0; font-weight: 400; letter-spacing: -0.01em; line-height: 1.1; }
-  .lede { margin-top: 14px; max-width: 560px; color: var(--muted-on-ink); font-size: 15px; line-height: 1.6; }
+  h1 { font-size: clamp(32px, 5vw, 46px); margin: 0; font-weight: 400; letter-spacing: -0.01em; line-height: 1.1; position: relative; }
+  .lede { margin-top: 14px; max-width: 560px; color: var(--muted-on-ink); font-size: 15px; line-height: 1.6; position: relative; }
+  .stat {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 20px; margin-right: 18px;
+    font-size: 12px; letter-spacing: 0.06em; color: var(--gold); position: relative;
+  }
+  .stat .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); }
 
   main { max-width: 880px; margin: 0 auto; padding: 28px 40px 80px; }
 
-  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 28px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 20px; }
   .search-wrap { position: relative; flex: 1 1 220px; }
   .search-wrap svg { position: absolute; left: 12px; top: 12px; }
-  input[type="text"], select {
+  input[type="text"] {
     width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line);
     background: var(--panel); color: var(--text-on-ink); font-size: 14px; font-family: inherit;
   }
   .search-wrap input { padding-left: 34px; }
 
+  .filter-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+  .pill {
+    padding: 7px 14px; border-radius: 20px; font-size: 12.5px; font-weight: 600;
+    border: 1px solid var(--line); background: var(--panel); color: var(--muted-on-ink);
+    cursor: pointer; font-family: inherit;
+  }
+  .pill.active { border-color: transparent; }
+
   .entries { display: flex; flex-direction: column; gap: 22px; }
   article {
     background: var(--parchment); color: #2A2621; border-radius: 10px; padding: 24px 26px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.25), 0 6px 18px rgba(0,0,0,0.18);
   }
   .entry-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
   .entry-num { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #8A7F6A; }
@@ -101,6 +122,8 @@
   <p class="lede sans">A working record of Black children and young adults who died under
     circumstances that were never fully explained. Every entry is dated,
     located, and sourced.</p>
+  <div class="stat sans"><span class="dot"></span><span id="stat-text">Loading case count…</span></div>
+  <div class="stat sans"><span class="dot"></span><span id="visitor-text"></span></div>
 </header>
 
 <main>
@@ -115,14 +138,8 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8A8171" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
       <input id="search" type="text" class="sans" placeholder="Search by name, place, detail…" />
     </div>
-    <select id="filter" class="sans">
-      <option value="all">All statuses</option>
-      <option value="unresolved">Unresolved</option>
-      <option value="investigation">Under investigation</option>
-      <option value="resolved">Resolved</option>
-      <option value="unknown">Status unclear</option>
-    </select>
   </div>
+  <div id="filter-pills" class="filter-pills sans"></div>
 
   <div id="entries" class="entries"></div>
   <p id="loading" class="sans empty">Loading the ledger…</p>
@@ -184,12 +201,51 @@
   }
 
   let allCases = [];
+  let currentFilter = "all";
+
+  const FILTERS = [
+    { key: "all", label: "All" },
+    { key: "unresolved", label: "Unresolved" },
+    { key: "investigation", label: "Under investigation" },
+    { key: "resolved", label: "Resolved" },
+    { key: "unknown", label: "Status unclear" },
+  ];
+
+  function pillColor(key) {
+    if (key === "all") return { border: "var(--muted-on-ink)", bg: "var(--panel)", text: "var(--text-on-ink)" };
+    const s = STATUS[key];
+    return { border: s.color, bg: s.bg, text: s.color };
+  }
+
+  function renderPills() {
+    const container = document.getElementById("filter-pills");
+    container.innerHTML = FILTERS.map(f => {
+      const active = f.key === currentFilter;
+      const c = pillColor(f.key);
+      const style = active
+        ? `background:${c.bg}; color:${c.text}; border-color:${c.border};`
+        : "";
+      return `<button class="pill${active ? " active" : ""}" data-key="${f.key}" style="${style}">${f.label}</button>`;
+    }).join("");
+    container.querySelectorAll(".pill").forEach(btn => {
+      btn.addEventListener("click", () => {
+        currentFilter = btn.dataset.key;
+        renderPills();
+        render();
+      });
+    });
+  }
+
+  function updateStat() {
+    const n = allCases.length;
+    document.getElementById("stat-text").textContent =
+      `${n} case${n === 1 ? "" : "s"} documented`;
+  }
 
   function render() {
     const q = document.getElementById("search").value.trim().toLowerCase();
-    const filter = document.getElementById("filter").value;
     const list = allCases.filter(c => {
-      const matchesFilter = filter === "all" || c.status === filter;
+      const matchesFilter = currentFilter === "all" || c.status === currentFilter;
       const matchesQuery = !q || c.name.toLowerCase().includes(q) ||
         c.location.toLowerCase().includes(q) || c.summary.toLowerCase().includes(q);
       return matchesFilter && matchesQuery;
@@ -239,6 +295,8 @@
           .map(rowToCase)
           .reverse();
         document.getElementById("loading").style.display = "none";
+        updateStat();
+        renderPills();
         render();
       },
       error: () => {
@@ -249,8 +307,20 @@
   }
 
   document.getElementById("search").addEventListener("input", render);
-  document.getElementById("filter").addEventListener("change", render);
   loadData();
+
+  function loadVisitorCount() {
+    const el = document.getElementById("visitor-text");
+    fetch("https://api.countapi.xyz/hit/the-ledger-martyembry/visits")
+      .then(res => res.json())
+      .then(data => {
+        el.textContent = `${data.value.toLocaleString()} visit${data.value === 1 ? "" : "s"}`;
+      })
+      .catch(() => {
+        el.parentElement.style.display = "none";
+      });
+  }
+  loadVisitorCount();
 </script>
 
 </body>
