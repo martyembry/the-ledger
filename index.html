@@ -77,6 +77,20 @@
   }
   .empty { color: #8A8171; font-size: 14px; }
   .footnote { margin-top: 40px; font-size: 12.5px; color: #6E655A; line-height: 1.6; }
+
+  .about {
+    border-left: 3px solid var(--gold); padding: 4px 0 4px 18px; margin-bottom: 32px;
+    color: var(--muted-on-ink); font-size: 14.5px; line-height: 1.7; max-width: 640px;
+  }
+  .submit {
+    margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--line);
+  }
+  .submit h2 { font-size: 20px; font-weight: 400; margin: 0 0 10px; }
+  .submit p { color: var(--muted-on-ink); font-size: 14.5px; line-height: 1.65; max-width: 560px; margin: 0 0 18px; }
+  .submit a.button {
+    display: inline-block; padding: 10px 20px; border-radius: 8px; border: 1px solid var(--gold);
+    color: var(--gold); text-decoration: none; font-size: 14px; font-weight: 600;
+  }
 </style>
 </head>
 <body>
@@ -90,6 +104,12 @@
 </header>
 
 <main>
+  <p class="about sans">Every case here carries at least two independent, named sources
+    before it's added. A status of unresolved means official findings and family
+    accounts still conflict, not that guilt or innocence has been decided one way
+    or the other. Each entry gets checked against that standard before it goes up,
+    and stays open to correction as more reporting comes out.</p>
+
   <div class="controls">
     <div class="search-wrap">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8A8171" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -106,6 +126,13 @@
 
   <div id="entries" class="entries"></div>
   <p id="loading" class="sans empty">Loading the ledger…</p>
+
+  <div class="submit sans">
+    <h2>Know a case that belongs here?</h2>
+    <p>Send the name, age, location, date, and any sources you have. Every
+      submission gets checked against the two-source standard before it's added.</p>
+    <a class="button" href="mailto:martyembry00@gmail.com?subject=Case%20submission%20for%20The%20Ledger">Submit a case</a>
+  </div>
 
   <p class="footnote sans">This page is read-only. Cases are added and edited in a
     source sheet that only the editor controls.</p>
@@ -227,4 +254,4 @@
 </script>
 
 </body>
-</html
+</html>
