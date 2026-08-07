@@ -53,7 +53,7 @@
   h1 { font-size: clamp(32px, 5vw, 46px); margin: 0; font-weight: 400; letter-spacing: -0.01em; line-height: 1.1; position: relative; }
   .lede { margin-top: 14px; max-width: 560px; color: var(--muted-on-ink); font-size: 15px; line-height: 1.6; position: relative; }
   .stat {
-    display: inline-flex; align-items: center; gap: 8px; margin-top: 20px; margin-right: 18px;
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 20px;
     font-size: 12px; letter-spacing: 0.06em; color: var(--gold); position: relative;
   }
   .stat .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); }
@@ -311,7 +311,7 @@
 
   function loadVisitorCount() {
     const el = document.getElementById("visitor-text");
-    fetch("https://api.countapi.xyz/hit/the-ledger-martyembry/visits")
+    fetch("https://countapi.mileshilliard.com/api/v1/hit/the-ledger-martyembry-visits")
       .then(res => res.json())
       .then(data => {
         el.textContent = `${data.value.toLocaleString()} visit${data.value === 1 ? "" : "s"}`;
