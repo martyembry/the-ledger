@@ -69,6 +69,12 @@
   }
   .search-wrap input { padding-left: 34px; }
 
+  .sort-select {
+    padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--panel); color: var(--text-on-ink); font-size: 13.5px; font-family: inherit;
+    cursor: pointer;
+  }
+
   .filter-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
   .pill {
     padding: 7px 14px; border-radius: 20px; font-size: 12.5px; font-weight: 600;
@@ -77,18 +83,25 @@
   }
   .pill.active { border-color: transparent; }
 
-  .entries { display: flex; flex-direction: column; gap: 22px; }
+  .entries { display: flex; flex-direction: column; gap: 10px; }
   article {
-    background: var(--parchment); color: #2A2621; border-radius: 10px; padding: 24px 26px;
+    background: var(--parchment); color: #2A2621; border-radius: 10px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.25), 0 6px 18px rgba(0,0,0,0.18);
+    cursor: pointer; overflow: hidden;
   }
-  .entry-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-  .entry-num { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #8A7F6A; }
+  .entry-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 22px; }
+  .entry-head-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .entry-num { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #8A7F6A; flex-shrink: 0; }
+  .entry-head h2.name { font-size: 17px; font-weight: 600; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .badge {
     display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600;
-    padding: 4px 10px; border-radius: 20px;
+    padding: 4px 10px; border-radius: 20px; flex-shrink: 0;
   }
-  h2.name { font-size: 24px; font-weight: 500; margin: 10px 0 4px; }
+  .chevron { flex-shrink: 0; color: #8A7F6A; transition: transform 0.15s ease; }
+  article.open .chevron { transform: rotate(90deg); }
+  .entry-body { padding: 0 26px 24px; display: none; }
+  article.open .entry-body { display: block; }
+  h2.name { font-size: 24px; font-weight: 500; margin: 4px 0 4px; }
   .meta { font-size: 13px; color: #5C5346; margin: 0 0 14px; }
   .summary { font-size: 15.5px; line-height: 1.65; margin: 0 0 14px; color: #3A342C; }
   .sources { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -140,6 +153,10 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8A8171" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
       <input id="search" type="text" class="sans" placeholder="Search by name, place, detail…" />
     </div>
+    <select id="sort" class="sort-select sans">
+      <option value="newest">Newest first</option>
+      <option value="az">Name, A to Z</option>
+    </select>
   </div>
   <div id="filter-pills" class="filter-pills sans"></div>
 
@@ -183,6 +200,12 @@
     return '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>';
   }
 
+  function chevronIcon() {
+    return '<svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>';
+  }
+
+  const expandedIds = new Set();
+
   function rowToCase(row, i) {
     const sources = [];
     for (let n = 1; n <= 6; n++) {
@@ -204,6 +227,7 @@
 
   let allCases = [];
   let currentFilter = "all";
+  let currentSort = "newest";
 
   const FILTERS = [
     { key: "all", label: "All" },
@@ -246,12 +270,16 @@
 
   function render() {
     const q = document.getElementById("search").value.trim().toLowerCase();
-    const list = allCases.filter(c => {
+    let list = allCases.filter(c => {
       const matchesFilter = currentFilter === "all" || c.status === currentFilter;
       const matchesQuery = !q || c.name.toLowerCase().includes(q) ||
         c.location.toLowerCase().includes(q) || c.summary.toLowerCase().includes(q);
       return matchesFilter && matchesQuery;
     });
+
+    if (currentSort === "az") {
+      list = [...list].sort((a, b) => a.name.localeCompare(b.name));
+    }
 
     const container = document.getElementById("entries");
     if (list.length === 0) {
@@ -265,20 +293,40 @@
       const sources = c.sources.map(src =>
         `<a href="${src.url}" target="_blank" rel="noreferrer">${src.label} ${extIcon()}</a>`
       ).join("");
+      const isOpen = expandedIds.has(c.id);
       return `
-        <article style="border-left:5px solid ${s.color}">
-          <div class="entry-top">
-            <span class="entry-num sans">Entry ${String(i + 1).padStart(2, "0")}</span>
-            <span class="badge sans" style="background:${s.bg}; color:${s.color}">
-              ${s.flame ? flameIcon() : ""} ${s.label}
-            </span>
+        <article data-id="${c.id}" class="${isOpen ? "open" : ""}" style="border-left:5px solid ${s.color}">
+          <div class="entry-head">
+            <div class="entry-head-left">
+              <span class="entry-num sans">${String(i + 1).padStart(2, "0")}</span>
+              <h2 class="name sans">${c.name}</h2>
+            </div>
+            <div class="entry-head-left">
+              <span class="badge sans" style="background:${s.bg}; color:${s.color}">
+                ${s.flame ? flameIcon() : ""} ${s.label}
+              </span>
+              ${chevronIcon()}
+            </div>
           </div>
-          <h2 class="name">${c.name}</h2>
-          <p class="meta sans">${meta}</p>
-          <p class="summary">${c.summary}</p>
-          <div class="sources sans">${sources}</div>
+          <div class="entry-body">
+            <p class="meta sans">${meta}</p>
+            <p class="summary">${c.summary}</p>
+            <div class="sources sans">${sources}</div>
+          </div>
         </article>`;
     }).join("");
+
+    container.querySelectorAll("article").forEach(el => {
+      el.addEventListener("click", () => {
+        const id = Number(el.dataset.id);
+        if (expandedIds.has(id)) {
+          expandedIds.delete(id);
+        } else {
+          expandedIds.add(id);
+        }
+        render();
+      });
+    });
   }
 
   function loadData() {
@@ -309,6 +357,10 @@
   }
 
   document.getElementById("search").addEventListener("input", render);
+  document.getElementById("sort").addEventListener("change", (e) => {
+    currentSort = e.target.value;
+    render();
+  });
   loadData();
 
   function loadVisitorCount() {
