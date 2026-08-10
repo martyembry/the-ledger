@@ -29,6 +29,8 @@
     background: var(--ink);
     color: var(--text-on-ink);
     font-family: 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+--justice: #4A3B6B;
+    --justice-bg: #E8E3F0;
   }
   .sans { font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; }
   a { color: inherit; }
@@ -181,12 +183,12 @@
     unresolved: { label: "Unresolved", color: "var(--brick)", bg: "var(--brick-bg)", flame: true },
     investigation: { label: "Under investigation", color: "var(--gold)", bg: "var(--gold-bg)", flame: true },
     resolved: { label: "Resolved", color: "var(--forest)", bg: "var(--forest-bg)", flame: false },
-    unknown: { label: "Status unclear", color: "var(--ash)", bg: "var(--ash-bg)", flame: false },
+    unknown: { label: "Status unclear",justice: { label: "Justice Denied", color: "var(--justice)", bg: "var(--justice-bg)", flame: false }, color: "var(--ash)", bg: "var(--ash-bg)", flame: false },
   };
 
   function statusKey(raw) {
     const s = (raw || "").toLowerCase().trim();
-    if (s.startsWith("unresolved")) return "unresolved";
+    if (s.startsWith("unresolved")) return "unresolved"; if (s.startsWith("justice")) return "justice";
     if (s.startsWith("under") || s.startsWith("investig")) return "investigation";
     if (s.startsWith("resolved")) return "resolved";
     return "unknown";
@@ -233,7 +235,7 @@
     { key: "all", label: "All" },
     { key: "unresolved", label: "Unresolved" },
     { key: "investigation", label: "Under investigation" },
-    { key: "resolved", label: "Resolved" },
+    { key: "resolved", label: "Resolved" },{ key: "justice", label: "Justice Denied" },
     { key: "unknown", label: "Status unclear" },
   ];
 
