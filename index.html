@@ -6,6 +6,8 @@
 <title>The Ledger</title>
 <meta name="description" content="A working record of Black children and young adults who died under circumstances that were never fully explained." />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <style>
   :root {
     --ink: #17181C;
@@ -22,6 +24,8 @@
     --forest-bg: #E2E8E2;
     --ash: #7A756B;
     --ash-bg: #E9E5DC;
+    --justice: #4A3B6B;
+    --justice-bg: #E8E3F0;
   }
   * { box-sizing: border-box; }
   body {
@@ -29,8 +33,6 @@
     background: var(--ink);
     color: var(--text-on-ink);
     font-family: 'Iowan Old Style', Georgia, 'Times New Roman', serif;
---justice: #4A3B6B;
-    --justice-bg: #E8E3F0;
   }
   .sans { font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; }
   a { color: inherit; }
@@ -118,6 +120,15 @@
     border-left: 3px solid var(--gold); padding: 4px 0 4px 18px; margin-bottom: 32px;
     color: var(--muted-on-ink); font-size: 14.5px; line-height: 1.7; max-width: 640px;
   }
+  #map {
+    height: 380px; border-radius: 10px; margin-bottom: 28px; border: 1px solid var(--line);
+    background: var(--panel);
+  }
+  .leaflet-popup-content-wrapper { background: var(--parchment); color: #2A2621; border-radius: 8px; }
+  .leaflet-popup-content { font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 13px; line-height: 1.5; margin: 10px 12px; }
+  .leaflet-popup-content strong { font-size: 14px; }
+  .leaflet-popup-tip { background: var(--parchment); }
+  .map-caption { font-size: 12px; color: var(--muted-on-ink); margin: -18px 0 24px; font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; }
   .submit {
     margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--line);
   }
@@ -149,6 +160,9 @@
     accounts still conflict, not that guilt or innocence has been decided one way
     or the other. Each entry gets checked against that standard before it goes up,
     and stays open to correction as more reporting comes out.</p>
+
+  <div id="map"></div>
+  <p class="map-caption sans">Click a dot to jump to that case below. The map reflects your current search and filter.</p>
 
   <div class="controls">
     <div class="search-wrap">
@@ -184,14 +198,15 @@
     investigation: { label: "Under investigation", color: "var(--gold)", bg: "var(--gold-bg)", flame: true },
     resolved: { label: "Resolved", color: "var(--forest)", bg: "var(--forest-bg)", flame: false },
     unknown: { label: "Status unclear", color: "var(--ash)", bg: "var(--ash-bg)", flame: false },
-justice: { label: "Justice Denied", color: "var(--justice)", bg: "var(--justice-bg)", flame: false },
+    justice: { label: "Justice Denied", color: "var(--justice)", bg: "var(--justice-bg)", flame: false },
   };
 
   function statusKey(raw) {
     const s = (raw || "").toLowerCase().trim();
-    if (s.startsWith("unresolved")) return "unresolved"; if (s.startsWith("justice")) return "justice";
+    if (s.startsWith("unresolved")) return "unresolved";
     if (s.startsWith("under") || s.startsWith("investig")) return "investigation";
     if (s.startsWith("resolved")) return "resolved";
+    if (s.startsWith("justice")) return "justice";
     return "unknown";
   }
 
@@ -209,6 +224,52 @@ justice: { label: "Justice Denied", color: "var(--justice)", bg: "var(--justice-
 
   const expandedIds = new Set();
 
+  let map = null;
+  let markersLayer = null;
+
+  function initMap() {
+    map = L.map("map", { scrollWheelZoom: false }).setView([37.5, -85], 5);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors",
+      maxZoom: 18,
+    }).addTo(map);
+    markersLayer = L.layerGroup().addTo(map);
+  }
+
+  function updateMap(list) {
+    if (!map) return;
+    markersLayer.clearLayers();
+    const bounds = [];
+    list.forEach(c => {
+      if (isNaN(c.lat) || isNaN(c.lng)) return;
+      const s = STATUS[c.status];
+      const marker = L.circleMarker([c.lat, c.lng], {
+        radius: 7,
+        color: s.color,
+        fillColor: s.color,
+        fillOpacity: 0.85,
+        weight: 2,
+      });
+      marker.bindPopup(
+        `<strong>${c.name}</strong><br>${s.label}<br>${c.location}`
+      );
+      marker.on("click", () => {
+        document.getElementById("search").value = c.name;
+        expandedIds.add(c.id);
+        render();
+        setTimeout(() => {
+          const card = document.querySelector(`article[data-id="${c.id}"]`);
+          if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 50);
+      });
+      marker.addTo(markersLayer);
+      bounds.push([c.lat, c.lng]);
+    });
+    if (bounds.length) {
+      map.fitBounds(bounds, { padding: [24, 24] });
+    }
+  }
+
   function rowToCase(row, i) {
     const sources = [];
     for (let n = 1; n <= 6; n++) {
@@ -224,6 +285,8 @@ justice: { label: "Justice Denied", color: "var(--justice)", bg: "var(--justice-
       date: (row.Date || "").trim(),
       status: statusKey(row.Status),
       summary: (row.Summary || "").trim(),
+      lat: parseFloat(row.Latitude),
+      lng: parseFloat(row.Longitude),
       sources,
     };
   }
@@ -236,7 +299,8 @@ justice: { label: "Justice Denied", color: "var(--justice)", bg: "var(--justice-
     { key: "all", label: "All" },
     { key: "unresolved", label: "Unresolved" },
     { key: "investigation", label: "Under investigation" },
-    { key: "resolved", label: "Resolved" },{ key: "justice", label: "Justice Denied" },
+    { key: "resolved", label: "Resolved" },
+    { key: "justice", label: "Justice Denied" },
     { key: "unknown", label: "Status unclear" },
   ];
 
@@ -285,6 +349,7 @@ justice: { label: "Justice Denied", color: "var(--justice)", bg: "var(--justice-
     }
 
     const container = document.getElementById("entries");
+    updateMap(list);
     if (list.length === 0) {
       container.innerHTML = '<p class="empty sans">Nothing matches that search.</p>';
       return;
@@ -350,6 +415,7 @@ justice: { label: "Justice Denied", color: "var(--justice)", bg: "var(--justice-
         document.getElementById("loading").style.display = "none";
         updateStat();
         renderPills();
+        if (!map) initMap();
         render();
       },
       error: () => {
@@ -381,4 +447,4 @@ justice: { label: "Justice Denied", color: "var(--justice)", bg: "var(--justice-
 </script>
 
 </body>
-</html> 
+</html>
