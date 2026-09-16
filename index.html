@@ -54,19 +54,20 @@
     display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
     font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold);
   }
-  h1 { font-size: clamp(32px, 5vw, 46px); margin: 0; font-weight: 400; letter-spacing: -0.01em; line-height: 1.1; position: relative; }
-  .hero-art { display: block; margin: 18px 0 6px; opacity: 0.92; }
+  h1 { font-size: clamp(40px, 7vw, 62px); margin: 0; font-weight: 400; letter-spacing: -0.01em; line-height: 1.1; position: relative; }
+  .hero-art { display: block; margin: 22px 0 8px; }
   .flame {
-    transform-origin: 110px 16px;
-    animation: flicker 2.6s ease-in-out infinite;
+    transform-origin: 130px 58px;
+    animation: flicker 2.4s ease-in-out infinite;
   }
   @keyframes flicker {
-    0%   { opacity: 0.85; transform: scale(1) skewX(0deg); }
-    20%  { opacity: 1;    transform: scale(1.04, 0.97) skewX(-1deg); }
-    40%  { opacity: 0.9;  transform: scale(0.97, 1.03) skewX(1deg); }
-    60%  { opacity: 1;    transform: scale(1.03, 0.96) skewX(-0.5deg); }
-    80%  { opacity: 0.88; transform: scale(0.99, 1.02) skewX(0.5deg); }
-    100% { opacity: 0.85; transform: scale(1) skewX(0deg); }
+    0%   { opacity: 0.92; transform: scale(1, 1) skewX(0deg); }
+    18%  { opacity: 1;    transform: scale(1.05, 0.95) skewX(-2deg); }
+    36%  { opacity: 0.88; transform: scale(0.94, 1.06) skewX(2deg); }
+    54%  { opacity: 1;    transform: scale(1.06, 0.93) skewX(-1.5deg); }
+    72%  { opacity: 0.9;  transform: scale(0.96, 1.04) skewX(1.5deg); }
+    88%  { opacity: 0.96; transform: scale(1.02, 0.98) skewX(-0.5deg); }
+    100% { opacity: 0.92; transform: scale(1, 1) skewX(0deg); }
   }
   .lede { margin-top: 14px; max-width: 560px; color: var(--muted-on-ink); font-size: 15px; line-height: 1.6; position: relative; }
   .stat {
@@ -158,20 +159,81 @@
 <header>
   <div class="eyebrow sans">Case documentation</div>
   <h1>The Ledger</h1>
-  <svg class="hero-art" width="180" height="80" viewBox="0 0 220 100" xmlns="http://www.w3.org/2000/svg">
-    <path d="M20 82 L20 30 Q20 22 30 22 L104 22 L104 84 L30 84 Q20 84 20 82 Z" fill="none" stroke="#B8922E" stroke-width="1.6"/>
-    <path d="M200 82 L200 30 Q200 22 190 22 L116 22 L116 84 L190 84 Q200 84 200 82 Z" fill="none" stroke="#B8922E" stroke-width="1.6"/>
-    <line x1="110" y1="20" x2="110" y2="86" stroke="#B8922E" stroke-width="1.6"/>
-    <line x1="30" y1="36" x2="96" y2="36" stroke="#B8922E" stroke-width="0.75" opacity="0.55"/>
-    <line x1="30" y1="46" x2="96" y2="46" stroke="#B8922E" stroke-width="0.75" opacity="0.55"/>
-    <line x1="30" y1="56" x2="90" y2="56" stroke="#B8922E" stroke-width="0.75" opacity="0.55"/>
-    <line x1="30" y1="66" x2="96" y2="66" stroke="#B8922E" stroke-width="0.75" opacity="0.55"/>
-    <line x1="124" y1="36" x2="190" y2="36" stroke="#B8922E" stroke-width="0.75" opacity="0.55"/>
-    <line x1="124" y1="46" x2="184" y2="46" stroke="#B8922E" stroke-width="0.75" opacity="0.55"/>
-    <line x1="124" y1="56" x2="190" y2="56" stroke="#B8922E" stroke-width="0.75" opacity="0.55"/>
-    <line x1="124" y1="66" x2="180" y2="66" stroke="#B8922E" stroke-width="0.75" opacity="0.55"/>
-    <path class="flame" d="M110 8 Q104 16 110 24 Q116 16 110 8 Z" fill="#B8922E" opacity="0.9"/>
-    <line x1="110" y1="24" x2="110" y2="20" stroke="#B8922E" stroke-width="1.2"/>
+  <svg class="hero-art" width="220" height="120" viewBox="0 0 260 140" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="coverLeft" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#8A6A1E"/>
+        <stop offset="100%" stop-color="#D4AF4E"/>
+      </linearGradient>
+      <linearGradient id="coverRight" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#D4AF4E"/>
+        <stop offset="100%" stop-color="#8A6A1E"/>
+      </linearGradient>
+      <radialGradient id="flameOuter" cx="50%" cy="75%" r="65%">
+        <stop offset="0%" stop-color="#FFD873"/>
+        <stop offset="45%" stop-color="#F2A93C"/>
+        <stop offset="80%" stop-color="#D9612B"/>
+        <stop offset="100%" stop-color="#B8422A"/>
+      </radialGradient>
+      <radialGradient id="flameInner" cx="50%" cy="85%" r="55%">
+        <stop offset="0%" stop-color="#FFF6D8"/>
+        <stop offset="60%" stop-color="#FFDE7A"/>
+        <stop offset="100%" stop-color="#F5A93C"/>
+      </radialGradient>
+    </defs>
+
+    <ellipse cx="130" cy="118" rx="98" ry="7" fill="#000000" opacity="0.28"/>
+
+    <path d="M28 100 L28 42 Q28 34 36 33 L124 26 L124 108 L36 109 Q28 108 28 100 Z"
+          fill="url(#coverLeft)" stroke="#6B5116" stroke-width="1"/>
+    <path d="M232 100 L232 42 Q232 34 224 33 L136 26 L136 108 L224 109 Q232 108 232 100 Z"
+          fill="url(#coverRight)" stroke="#6B5116" stroke-width="1"/>
+
+    <path d="M124 26 L136 26 L136 108 L124 108 Z" fill="#5E4712"/>
+
+    <g stroke="#F0E9DA" stroke-width="0.6" opacity="0.75">
+      <line x1="38" y1="40" x2="120" y2="35"/>
+      <line x1="38" y1="50" x2="120" y2="45"/>
+      <line x1="38" y1="60" x2="120" y2="55"/>
+      <line x1="38" y1="70" x2="118" y2="65"/>
+      <line x1="38" y1="80" x2="120" y2="75"/>
+      <line x1="38" y1="90" x2="118" y2="85"/>
+      <line x1="140" y1="35" x2="222" y2="40"/>
+      <line x1="140" y1="45" x2="222" y2="50"/>
+      <line x1="140" y1="55" x2="222" y2="60"/>
+      <line x1="142" y1="65" x2="222" y2="70"/>
+      <line x1="140" y1="75" x2="222" y2="80"/>
+      <line x1="142" y1="85" x2="222" y2="90"/>
+    </g>
+
+    <g opacity="0.5">
+      <line x1="28" y1="42" x2="24" y2="43" stroke="#F0E9DA" stroke-width="1.4"/>
+      <line x1="28" y1="52" x2="24" y2="53" stroke="#F0E9DA" stroke-width="1.4"/>
+      <line x1="28" y1="62" x2="24" y2="63" stroke="#F0E9DA" stroke-width="1.4"/>
+      <line x1="28" y1="72" x2="24" y2="73" stroke="#F0E9DA" stroke-width="1.4"/>
+      <line x1="28" y1="82" x2="24" y2="83" stroke="#F0E9DA" stroke-width="1.4"/>
+      <line x1="232" y1="42" x2="236" y2="43" stroke="#F0E9DA" stroke-width="1.4"/>
+      <line x1="232" y1="52" x2="236" y2="53" stroke="#F0E9DA" stroke-width="1.4"/>
+      <line x1="232" y1="62" x2="236" y2="63" stroke="#F0E9DA" stroke-width="1.4"/>
+      <line x1="232" y1="72" x2="236" y2="73" stroke="#F0E9DA" stroke-width="1.4"/>
+      <line x1="232" y1="82" x2="236" y2="83" stroke="#F0E9DA" stroke-width="1.4"/>
+    </g>
+
+    <g class="flame">
+      <path d="M130 12
+               C 121 22, 116 34, 122 46
+               C 125 52, 130 55, 130 60
+               C 130 55, 135 52, 138 46
+               C 144 34, 139 22, 130 12 Z"
+            fill="url(#flameOuter)"/>
+      <path d="M130 30
+               C 125 37, 123 44, 127 50
+               C 128 53, 130 55, 130 57
+               C 130 55, 132 53, 133 50
+               C 137 44, 135 37, 130 30 Z"
+            fill="url(#flameInner)"/>
+    </g>
+    <rect x="128" y="58" width="4" height="4" fill="#5E4712"/>
   </svg>
   <p class="lede sans">The Ledger is a growing record of Black children and young
     adults who died under circumstances that were never fully explained. It started
