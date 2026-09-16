@@ -55,6 +55,19 @@
     font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold);
   }
   h1 { font-size: clamp(32px, 5vw, 46px); margin: 0; font-weight: 400; letter-spacing: -0.01em; line-height: 1.1; position: relative; }
+  .hero-art { display: block; margin: 18px 0 6px; opacity: 0.92; }
+  .flame {
+    transform-origin: 110px 16px;
+    animation: flicker 2.6s ease-in-out infinite;
+  }
+  @keyframes flicker {
+    0%   { opacity: 0.85; transform: scale(1) skewX(0deg); }
+    20%  { opacity: 1;    transform: scale(1.04, 0.97) skewX(-1deg); }
+    40%  { opacity: 0.9;  transform: scale(0.97, 1.03) skewX(1deg); }
+    60%  { opacity: 1;    transform: scale(1.03, 0.96) skewX(-0.5deg); }
+    80%  { opacity: 0.88; transform: scale(0.99, 1.02) skewX(0.5deg); }
+    100% { opacity: 0.85; transform: scale(1) skewX(0deg); }
+  }
   .lede { margin-top: 14px; max-width: 560px; color: var(--muted-on-ink); font-size: 15px; line-height: 1.6; position: relative; }
   .stat {
     display: inline-flex; align-items: center; gap: 8px; margin-top: 20px;
@@ -145,6 +158,21 @@
 <header>
   <div class="eyebrow sans">Case documentation</div>
   <h1>The Ledger</h1>
+  <svg class="hero-art" width="180" height="80" viewBox="0 0 220 100" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20 82 L20 30 Q20 22 30 22 L104 22 L104 84 L30 84 Q20 84 20 82 Z" fill="none" stroke="#B8922E" stroke-width="1.6"/>
+    <path d="M200 82 L200 30 Q200 22 190 22 L116 22 L116 84 L190 84 Q200 84 200 82 Z" fill="none" stroke="#B8922E" stroke-width="1.6"/>
+    <line x1="110" y1="20" x2="110" y2="86" stroke="#B8922E" stroke-width="1.6"/>
+    <line x1="30" y1="36" x2="96" y2="36" stroke="#B8922E" stroke-width="0.75" opacity="0.55"/>
+    <line x1="30" y1="46" x2="96" y2="46" stroke="#B8922E" stroke-width="0.75" opacity="0.55"/>
+    <line x1="30" y1="56" x2="90" y2="56" stroke="#B8922E" stroke-width="0.75" opacity="0.55"/>
+    <line x1="30" y1="66" x2="96" y2="66" stroke="#B8922E" stroke-width="0.75" opacity="0.55"/>
+    <line x1="124" y1="36" x2="190" y2="36" stroke="#B8922E" stroke-width="0.75" opacity="0.55"/>
+    <line x1="124" y1="46" x2="184" y2="46" stroke="#B8922E" stroke-width="0.75" opacity="0.55"/>
+    <line x1="124" y1="56" x2="190" y2="56" stroke="#B8922E" stroke-width="0.75" opacity="0.55"/>
+    <line x1="124" y1="66" x2="180" y2="66" stroke="#B8922E" stroke-width="0.75" opacity="0.55"/>
+    <path class="flame" d="M110 8 Q104 16 110 24 Q116 16 110 8 Z" fill="#B8922E" opacity="0.9"/>
+    <line x1="110" y1="24" x2="110" y2="20" stroke="#B8922E" stroke-width="1.2"/>
+  </svg>
   <p class="lede sans">The Ledger is a growing record of Black children and young
     adults who died under circumstances that were never fully explained. It started
     with a handful of documented cases and keeps expanding, one verified entry at a
